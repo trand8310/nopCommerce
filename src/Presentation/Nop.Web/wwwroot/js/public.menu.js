@@ -3,10 +3,12 @@
     subCatRoute: '',
     topMenuRootSelector: '',
     mobileMenuRootSelector: '',
+    localized_data: false,
 
-    init: function (rootRoute, subCatRoute, topMenuRootSelector, mobileMenuRootSelector) {
+    init: function (rootRoute, subCatRoute, topMenuRootSelector, mobileMenuRootSelector, localized_data) {
         this.rootRoute = rootRoute;
         this.subCatRoute = subCatRoute;
+        this.localized_data = localized_data;
         this.topMenuRootSelector = $(topMenuRootSelector);
         this.mobileMenuRootSelector = $(mobileMenuRootSelector);
 
@@ -47,7 +49,7 @@
         let selfTop = this;
 
         let catSel = 'li[' + this.topMenuLineAttr + ' = ' + id + ']';
-        if ($(catSel).hasClass("loaded")) { return; }
+        if ($(catSel).is(".loaded,.loading")) { return; }
 
         $.ajax({
             cache: false,
@@ -65,7 +67,13 @@
                 $(catSel).addClass("loaded");
                 $(catSel + ' > ul').append(listItems);
             },
-            error: this.ajaxFailure
+            error: this.ajaxFailure,
+            beforeSend: function() {
+                $(catSel).addClass("loading");
+            },
+            complete: function() {
+                $(catSel).removeClass("loading");
+            }
         });
     },
 
@@ -160,6 +168,6 @@
     },
 
     ajaxFailure: function () {
-        alert('Failed to open menu. Please refresh the page and try one more time.');
+        alert(this.localized_data.AjaxFailure);
     }
 };

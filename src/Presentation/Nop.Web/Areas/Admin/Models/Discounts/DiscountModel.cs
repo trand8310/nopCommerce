@@ -10,7 +10,7 @@ namespace Nop.Web.Areas.Admin.Models.Discounts
     /// <summary>
     /// Represents a discount model
     /// </summary>
-    public partial class DiscountModel : BaseNopEntityModel
+    public partial record DiscountModel : BaseNopEntityModel
     {
         #region Ctor
 
@@ -30,6 +30,9 @@ namespace Nop.Web.Areas.Admin.Models.Discounts
 
         [NopResourceDisplayName("Admin.Promotions.Discounts.Fields.Name")]
         public string Name { get; set; }
+
+        [NopResourceDisplayName("Admin.Promotions.Discounts.Fields.AdminComment")]
+        public string AdminComment { get; set; }
 
         [NopResourceDisplayName("Admin.Promotions.Discounts.Fields.DiscountType")]
         public int DiscountTypeId { get; set; }

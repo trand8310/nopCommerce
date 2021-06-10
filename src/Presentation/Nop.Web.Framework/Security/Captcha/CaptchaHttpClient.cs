@@ -33,8 +33,8 @@ namespace Nop.Web.Framework.Security.Captcha
             _webHelper = webHelper;
 
             //configure client
-            client.BaseAddress = new Uri(NopSecurityDefaults.RecaptchaApiUrl);
-            client.DefaultRequestHeaders.Add(HeaderNames.UserAgent, $"nopCommerce-{NopVersion.CurrentVersion}");
+            client.BaseAddress = new Uri(captchaSettings.ReCaptchaApiUrl);
+            client.DefaultRequestHeaders.Add(HeaderNames.UserAgent, $"nopCommerce-{NopVersion.CURRENT_VERSION}");
 
             if (captchaSettings.ReCaptchaRequestTimeout is int timeout && timeout > 0)
                 client.Timeout = TimeSpan.FromSeconds(timeout);
@@ -48,7 +48,10 @@ namespace Nop.Web.Framework.Security.Captcha
         /// Validate reCAPTCHA
         /// </summary>
         /// <param name="responseValue">Response value</param>
-        /// <returns>The asynchronous task whose result contains response from the reCAPTCHA service</returns>
+        /// <returns>
+        /// A task that represents the asynchronous operation
+        /// The task result contains the asynchronous task whose result contains response from the reCAPTCHA service
+        /// </returns>
         public virtual async Task<CaptchaResponse> ValidateCaptchaAsync(string responseValue)
         {
             //prepare URL to request
