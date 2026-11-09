@@ -3,17 +3,17 @@
     Layout = "_ColumnsOne";
 
     //title
-    Html.AddTitleParts(T("PageTitle.ContactUs").Text);
+    NopHtml.AddTitleParts(T("PageTitle.ContactUs").Text);
     //page class
-    Html.AppendPageCssClassParts("html-contact-page");
+    NopHtml.AppendPageCssClassParts("html-contact-page");
 }
 <div class="page contact-page">
     <div class="page-title">
         <h1>@T("PageTitle.ContactUs")</h1>
     </div>
     <div class="page-body">
-        @await Component.InvokeAsync("TopicBlock", new { systemName = "ContactUs" })
-        @await Component.InvokeAsync("Widget", new { widgetZone = PublicWidgetZones.ContactUsTop })
+        @await Component.InvokeAsync(typeof(TopicBlockViewComponent), new { systemName = "ContactUs" })
+        @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.ContactUsTop, additionalData = Model })
         @if (Model.SuccessfullySent)
         {
             <div class="result">
@@ -22,9 +22,9 @@
         }
         else
         {
-            <form asp-route="ContactUs" method="post">
+            <form asp-route="@NopRouteNames.General.CONTACT_US" method="post">
                 <div asp-validation-summary="ModelOnly" class="message-error"></div>
-                <div class="fieldset">
+                <section class="fieldset">
                     <div class="form-fields">
                         <div class="inputs">
                             <label asp-for="FullName" asp-postfix=":"></label>
@@ -53,19 +53,23 @@
                             <nop-required />
                             <span asp-validation-for="Enquiry"></span>
                         </div>
+
+                        @if (Model.ContactFormAttributes.Count > 0)
+                        {
+                            @await Html.PartialAsync("_ContactFormAttributes", Model.ContactFormAttributes)
+                        }
+
                         @if (Model.DisplayCaptcha)
                         {
-                            <div class="captcha-box">
-                                <nop-captcha />
-                            </div>
+                            <nop-captcha />
                         }
                     </div>
-                </div>
-                <div class="buttons">
-                    <input type="submit" name="send-email" class="button-1 contact-us-button" value="@T("ContactUs.Button")" />
-                </div>
+                </section>
+                <section class="buttons">
+                    <button type="submit" name="send-email" class="button-1 contact-us-button">@T("ContactUs.Button")</button>
+                </section>
             </form>
         }
-        @await Component.InvokeAsync("Widget", new { widgetZone = PublicWidgetZones.ContactUsBottom })
+        @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.ContactUsBottom, additionalData = Model })
     </div>
 </div>

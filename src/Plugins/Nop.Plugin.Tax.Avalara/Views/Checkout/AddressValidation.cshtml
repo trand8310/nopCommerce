@@ -1,7 +1,7 @@
-﻿@model Nop.Plugin.Tax.Avalara.Models.Checkout.AddressValidationModel
+﻿@model AddressValidationModel
 
-<script>
-    $(document).ready(function () {
+<script asp-location="Footer">
+    $(function() {
         @if (Model.IsError)
         {
             <text>alert('@Model.Message');</text>
@@ -12,17 +12,16 @@
                 var customerConfirmation = confirm('@Model.Message');
                 if (customerConfirmation) {
                     var postData = {
-                        addressId: '@Model.AddressId',
-                        isNewAddress: '@Model.IsNewAddress'
+                        addressId: '@Model.AddressId'
                     };
                     addAntiForgeryToken(postData);
 
                     $.ajax({
                         cache: false,
-                        type: "POST",
-                        url: "@Url.Action("UseValidatedAddress", "AddressValidation")",
+                        type: 'POST',
+                        url: '@Url.Action("UseValidatedAddress", "AddressValidation")',
                         data: postData,
-                        dataType: "json"
+                        dataType: 'json'
                     });
                 }
             </text>

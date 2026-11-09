@@ -1,13 +1,13 @@
-﻿using System;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
-using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Security;
+using Nop.Core.Http;
+using Nop.Core.Http.Extensions;
 using Nop.Core.Infrastructure;
+using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Services.Localization;
 using Nop.Services.Media;
@@ -15,249 +15,385 @@ using Nop.Services.Messages;
 using Nop.Services.Orders;
 using Nop.Web.Factories;
 using Nop.Web.Framework.Mvc.Filters;
-using Nop.Web.Framework.Security;
 using Nop.Web.Models.Order;
 
-namespace Nop.Web.Controllers
+namespace Nop.Web.Controllers;
+
+[AutoValidateAntiforgeryToken]
+public partial class ReturnRequestController : BasePublicController
 {
-    public partial class ReturnRequestController : BasePublicController
+    #region Fields
+
+    protected readonly CaptchaSettings _captchaSettings;
+    protected readonly IAddressService _addressService;
+    protected readonly ICustomerService _customerService;
+    protected readonly ICustomNumberFormatter _customNumberFormatter;
+    protected readonly IDownloadService _downloadService;
+    protected readonly IGenericAttributeService _genericAttributeService;
+    protected readonly ILocalizationService _localizationService;
+    protected readonly INopFileProvider _fileProvider;
+    protected readonly IOrderProcessingService _orderProcessingService;
+    protected readonly IOrderService _orderService;
+    protected readonly IReturnRequestModelFactory _returnRequestModelFactory;
+    protected readonly IReturnRequestService _returnRequestService;
+    protected readonly IStoreContext _storeContext;
+    protected readonly IWorkContext _workContext;
+    protected readonly IWorkflowMessageService _workflowMessageService;
+    protected readonly LocalizationSettings _localizationSettings;
+    protected readonly ReturnRequestSettings _returnRequestSettings;
+
+    #endregion
+
+    #region Ctor
+
+    public ReturnRequestController(CaptchaSettings captchaSettings,
+        IAddressService addressService,
+        ICustomerService customerService,
+        ICustomNumberFormatter customNumberFormatter,
+        IDownloadService downloadService,
+        IGenericAttributeService genericAttributeService,
+        ILocalizationService localizationService,
+        INopFileProvider fileProvider,
+        IOrderProcessingService orderProcessingService,
+        IOrderService orderService,
+        IReturnRequestModelFactory returnRequestModelFactory,
+        IReturnRequestService returnRequestService,
+        IStoreContext storeContext,
+        IWorkContext workContext,
+        IWorkflowMessageService workflowMessageService,
+        LocalizationSettings localizationSettings,
+        ReturnRequestSettings returnRequestSettings)
     {
-        #region Fields
+        _captchaSettings = captchaSettings;
+        _addressService = addressService;
+        _customerService = customerService;
+        _customNumberFormatter = customNumberFormatter;
+        _downloadService = downloadService;
+        _genericAttributeService = genericAttributeService;
+        _localizationService = localizationService;
+        _fileProvider = fileProvider;
+        _orderProcessingService = orderProcessingService;
+        _orderService = orderService;
+        _returnRequestModelFactory = returnRequestModelFactory;
+        _returnRequestService = returnRequestService;
+        _storeContext = storeContext;
+        _workContext = workContext;
+        _workflowMessageService = workflowMessageService;
+        _localizationSettings = localizationSettings;
+        _returnRequestSettings = returnRequestSettings;
+    }
 
-        private readonly ICustomerService _customerService;
-        private readonly ICustomNumberFormatter _customNumberFormatter;
-        private readonly IDownloadService _downloadService;
-        private readonly ILocalizationService _localizationService;
-        private readonly INopFileProvider _fileProvider;
-        private readonly IOrderProcessingService _orderProcessingService;
-        private readonly IOrderService _orderService;
-        private readonly IReturnRequestModelFactory _returnRequestModelFactory;
-        private readonly IReturnRequestService _returnRequestService;
-        private readonly IStoreContext _storeContext;
-        private readonly IWorkContext _workContext;
-        private readonly IWorkflowMessageService _workflowMessageService;
-        private readonly LocalizationSettings _localizationSettings;
-        private readonly OrderSettings _orderSettings;
+    #endregion
 
-        #endregion
+    #region Utilities
 
-        #region Ctor
+    protected virtual async Task<bool> ValidateWithdrawalTokenAsync(Order order, string token)
+    {
+        if (string.IsNullOrEmpty(token))
+            return false;
 
-        public ReturnRequestController(ICustomerService customerService,
-            ICustomNumberFormatter customNumberFormatter,
-            IDownloadService downloadService,
-            ILocalizationService localizationService,
-            INopFileProvider fileProvider,
-            IOrderProcessingService orderProcessingService,
-            IOrderService orderService,
-            IReturnRequestModelFactory returnRequestModelFactory,
-            IReturnRequestService returnRequestService,
-            IStoreContext storeContext,
-            IWorkContext workContext,
-            IWorkflowMessageService workflowMessageService,
-            LocalizationSettings localizationSettings,
-            OrderSettings orderSettings)
+        var orderCustomer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+
+        //order has been created by registered customer
+        if (orderCustomer != null && !await _customerService.IsGuestAsync(orderCustomer))
+            return false;
+
+        var existedToken = await _genericAttributeService.GetAttributeAsync<string>(order, NopOrderDefaults.WithdrawalTokenAttribute);
+        var existedTokenGeneratedDate = await _genericAttributeService.GetAttributeAsync<DateTime>(order, NopOrderDefaults.WithdrawalTokenDateGeneratedAttribute);
+
+        return string.Equals(token, existedToken, StringComparison.OrdinalIgnoreCase) && existedTokenGeneratedDate > DateTime.UtcNow.AddDays(-_returnRequestSettings.WithdrawalLinkDaysValid);
+    }
+
+    #endregion
+
+    #region Methods
+
+    public virtual async Task<IActionResult> CustomerReturnRequests()
+    {
+        if (!await _customerService.IsRegisteredAsync(await _workContext.GetCurrentCustomerAsync()))
+            return Challenge();
+
+        var model = await _returnRequestModelFactory.PrepareCustomerReturnRequestsModelAsync();
+        return View(model);
+    }
+
+    public virtual async Task<IActionResult> Find()
+    {
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+
+        if (await _customerService.IsRegisteredAsync(currentCustomer))
+            return RedirectToRoute(NopRouteNames.General.CUSTOMER_ORDERS);
+
+        if (!_returnRequestSettings.GuestReturnRequestsAllowed)
+            return Challenge();
+
+        return View(await _returnRequestModelFactory.PrepareWithdrawalFormModelAsync(null));
+    }
+
+    [HttpPost]
+    [ValidateCaptcha]
+    public virtual async Task<IActionResult> Find(WithdrawalFormModel model, bool captchaValid)
+    {
+        //validate CAPTCHA
+        if (_captchaSettings.Enabled && _captchaSettings.ShowOnWithdrawalForm && !captchaValid)
+            ModelState.AddModelError("", await _localizationService.GetResourceAsync("Common.WrongCaptchaMessage"));
+
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+
+        if (await _customerService.IsRegisteredAsync(currentCustomer))
+            return RedirectToRoute(NopRouteNames.General.CUSTOMER_ORDERS);
+
+        if (!ModelState.IsValid)
+            return View(await _returnRequestModelFactory.PrepareWithdrawalFormModelAsync(model));
+
+        var order = int.TryParse(model.OrderNumber, out var orderNumber)
+            ? await _orderService.GetOrderByIdAsync(orderNumber) :
+            await _orderService.GetOrderByCustomOrderNumberAsync(model.OrderNumber);
+
+        var resultText = await _localizationService.GetResourceAsync("ReturnRequests.WithdrawalForm.ConfirmationText");
+        var store = await _storeContext.GetCurrentStoreAsync();
+
+        model = await _returnRequestModelFactory.PrepareWithdrawalFormModelAsync(model);
+
+        if (order is null || order.StoreId != store.Id)
+            return View(model with { Result = resultText });
+
+        if (!await _orderProcessingService.IsReturnRequestAllowedAsync(order))
+            return View(model with { Result = resultText });
+
+        var address = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
+
+        if (!string.Equals(address?.Email, model.EmailAddress, StringComparison.OrdinalIgnoreCase))
+            return View(model with { Result = resultText });
+
+        //save token and current date
+        await _genericAttributeService.SaveAttributeAsync(order, NopOrderDefaults.WithdrawalTokenAttribute, Guid.NewGuid().ToString());
+        await _genericAttributeService.SaveAttributeAsync(order, NopOrderDefaults.WithdrawalTokenDateGeneratedAttribute, DateTime.UtcNow);
+
+        //send email
+        await _workflowMessageService.SendWithdrawalRequestConfirmationNotificationAsync(order);
+
+        return View(model with { Result = resultText });
+    }
+
+    public virtual async Task<IActionResult> ReturnRequest(int orderId, string token)
+    {
+
+        var order = await _orderService.GetOrderByIdAsync(orderId);
+
+        if (order == null || order.Deleted)
+            return Challenge();
+
+        if (!string.IsNullOrEmpty(token))
         {
-            _customerService = customerService;
-            _customNumberFormatter = customNumberFormatter;
-            _downloadService = downloadService;
-            _localizationService = localizationService;
-            _fileProvider = fileProvider;
-            _orderProcessingService = orderProcessingService;
-            _orderService = orderService;
-            _returnRequestModelFactory = returnRequestModelFactory;
-            _returnRequestService = returnRequestService;
-            _storeContext = storeContext;
-            _workContext = workContext;
-            _workflowMessageService = workflowMessageService;
-            _localizationSettings = localizationSettings;
-            _orderSettings = orderSettings;
+            if (!await ValidateWithdrawalTokenAsync(order, token))
+                return RedirectToRoute(NopRouteNames.Standard.RETURN_REQUEST);
+        }
+        else
+        {
+            var customer = await _workContext.GetCurrentCustomerAsync();
+            if (customer.Id != order.CustomerId)
+                return Challenge();
         }
 
-        #endregion
+        if (!await _orderProcessingService.IsReturnRequestAllowedAsync(order))
+            return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
 
-        #region Methods
+        var model = new SubmitReturnRequestModel() { WithdrawalToken = token };
+        model = await _returnRequestModelFactory.PrepareSubmitReturnRequestModelAsync(model, order);
 
-        [HttpsRequirement(SslRequirement.Yes)]
-        public virtual IActionResult CustomerReturnRequests()
+        return View(model);
+    }
+
+    [HttpPost, ActionName("ReturnRequest")]
+    public virtual async Task<IActionResult> ReturnRequestSubmit(int orderId, SubmitReturnRequestModel model, IFormCollection form)
+    {
+        var order = await _orderService.GetOrderByIdAsync(orderId);
+        if (order == null || order.Deleted)
+            return Challenge();
+
+        var customer = await _workContext.GetCurrentCustomerAsync();
+
+        if (!string.IsNullOrEmpty(model.WithdrawalToken))
         {
-            if (!_workContext.CurrentCustomer.IsRegistered())
+            if (!await ValidateWithdrawalTokenAsync(order, model.WithdrawalToken))
                 return Challenge();
-
-            var model = _returnRequestModelFactory.PrepareCustomerReturnRequestsModel();
-            return View(model);
+        }
+        else
+        {
+            if (customer.Id != order.CustomerId)
+                return Challenge();
         }
 
-        [HttpsRequirement(SslRequirement.Yes)]
-        public virtual IActionResult ReturnRequest(int orderId)
+        if (!await _orderProcessingService.IsReturnRequestAllowedAsync(order))
+            return RedirectToRoute(NopRouteNames.General.HOMEPAGE);
+
+        var count = 0;
+
+        var downloadId = 0;
+        if (_returnRequestSettings.ReturnRequestsAllowFiles)
         {
-            var order = _orderService.GetOrderById(orderId);
-            if (order == null || order.Deleted || _workContext.CurrentCustomer.Id != order.CustomerId)
-                return Challenge();
-
-            if (!_orderProcessingService.IsReturnRequestAllowed(order))
-                return RedirectToRoute("Homepage");
-
-            var model = new SubmitReturnRequestModel();
-            model = _returnRequestModelFactory.PrepareSubmitReturnRequestModel(model, order);
-            return View(model);
+            var download = await _downloadService.GetDownloadByGuidAsync(model.UploadedFileGuid);
+            if (download != null)
+                downloadId = download.Id;
         }
 
-        [HttpPost, ActionName("ReturnRequest")]
-        [PublicAntiForgery]
-        public virtual IActionResult ReturnRequestSubmit(int orderId, SubmitReturnRequestModel model, IFormCollection form)
+        var store = await _storeContext.GetCurrentStoreAsync();
+
+        //returnable products
+        var orderItems = await _orderService.GetOrderItemsAsync(order.Id, isNotReturnable: false);
+        var returnRequestAvailability = await _returnRequestService.GetReturnRequestAvailabilityAsync(order.Id);
+
+        foreach (var orderItem in orderItems)
         {
-            var order = _orderService.GetOrderById(orderId);
-            if (order == null || order.Deleted || _workContext.CurrentCustomer.Id != order.CustomerId)
-                return Challenge();
-
-            if (!_orderProcessingService.IsReturnRequestAllowed(order))
-                return RedirectToRoute("Homepage");
-
-            var count = 0;
-
-            var downloadId = 0;
-            if (_orderSettings.ReturnRequestsAllowFiles)
+            var quantity = 0; //parse quantity
+            foreach (var formKey in form.Keys)
             {
-                var download = _downloadService.GetDownloadByGuid(model.UploadedFileGuid);
-                if (download != null)
-                    downloadId = download.Id;
-            }
-
-            //returnable products
-            var orderItems = order.OrderItems.Where(oi => !oi.Product.NotReturnable);
-            foreach (var orderItem in orderItems)
-            {
-                var quantity = 0; //parse quantity
-                foreach (var formKey in form.Keys)
-                    if (formKey.Equals($"quantity{orderItem.Id}", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        int.TryParse(form[formKey], out quantity);
-                        break;
-                    }
-                if (quantity > 0)
+                if (formKey.Equals($"quantity{orderItem.Id}", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    var rrr = _returnRequestService.GetReturnRequestReasonById(model.ReturnRequestReasonId);
-                    var rra = _returnRequestService.GetReturnRequestActionById(model.ReturnRequestActionId);
-
-                    var rr = new ReturnRequest
-                    {
-                        CustomNumber = "",
-                        StoreId = _storeContext.CurrentStore.Id,
-                        OrderItemId = orderItem.Id,
-                        Quantity = quantity,
-                        CustomerId = _workContext.CurrentCustomer.Id,
-                        ReasonForReturn = rrr != null ? _localizationService.GetLocalized(rrr, x => x.Name) : "not available",
-                        RequestedAction = rra != null ? _localizationService.GetLocalized(rra, x => x.Name) : "not available",
-                        CustomerComments = model.Comments,
-                        UploadedFileId = downloadId,
-                        StaffNotes = string.Empty,
-                        ReturnRequestStatus = ReturnRequestStatus.Pending,
-                        CreatedOnUtc = DateTime.UtcNow,
-                        UpdatedOnUtc = DateTime.UtcNow
-                    };
-                    _workContext.CurrentCustomer.ReturnRequests.Add(rr);
-                    _customerService.UpdateCustomer(_workContext.CurrentCustomer);
-                    //set return request custom number
-                    rr.CustomNumber = _customNumberFormatter.GenerateReturnRequestCustomNumber(rr);
-                    _customerService.UpdateCustomer(_workContext.CurrentCustomer);
-                    //notify store owner
-                    _workflowMessageService.SendNewReturnRequestStoreOwnerNotification(rr, orderItem, _localizationSettings.DefaultAdminLanguageId);
-                    //notify customer
-                    _workflowMessageService.SendNewReturnRequestCustomerNotification(rr, orderItem, order.CustomerLanguageId);
-
-                    count++;
+                    _ = int.TryParse(form[formKey], out quantity);
+                    break;
                 }
             }
 
-            model = _returnRequestModelFactory.PrepareSubmitReturnRequestModel(model, order);
-            if (count > 0)
-                model.Result = _localizationService.GetResource("ReturnRequests.Submitted");
-            else
-                model.Result = _localizationService.GetResource("ReturnRequests.NoItemsSubmitted");
+            if (quantity > 0)
+            {
+                var returnableOrderItem = returnRequestAvailability.ReturnableOrderItems.FirstOrDefault(oi =>
+                    oi.OrderItem.Id == orderItem.Id);
 
-            return View(model);
+                if (returnableOrderItem is not { AvailableQuantityForReturn: > 0 })
+                    continue;
+
+                quantity = Math.Min(quantity, returnableOrderItem.AvailableQuantityForReturn);
+
+                var rrr = await _returnRequestService.GetReturnRequestReasonByIdAsync(model.ReturnRequestReasonId);
+                var rra = await _returnRequestService.GetReturnRequestActionByIdAsync(model.ReturnRequestActionId);
+
+                var rr = new ReturnRequest
+                {
+                    CustomNumber = "",
+                    StoreId = store.Id,
+                    OrderItemId = orderItem.Id,
+                    Quantity = quantity,
+                    CustomerId = order.CustomerId,
+                    CustomerComments = model.Comments,
+                    UploadedFileId = downloadId,
+                    StaffNotes = string.Empty,
+                    ReasonForReturn = _returnRequestSettings.ReturnReasonsEnabled && rrr != null ? await _localizationService.GetLocalizedAsync(rrr, x => x.Name) : "not available",
+                    RequestedAction = _returnRequestSettings.ReturnActionsEnabled && rra != null ? await _localizationService.GetLocalizedAsync(rra, x => x.Name) : "not available",
+                    ReturnRequestStatus = ReturnRequestStatus.Pending,
+                    CreatedOnUtc = DateTime.UtcNow,
+                    UpdatedOnUtc = DateTime.UtcNow
+                };
+
+                await _returnRequestService.InsertReturnRequestAsync(rr);
+
+                //set return request custom number
+                rr.CustomNumber = _customNumberFormatter.GenerateReturnRequestCustomNumber(rr);
+                await _returnRequestService.UpdateReturnRequestAsync(rr);
+
+                //notify store owner
+                await _workflowMessageService.SendNewReturnRequestStoreOwnerNotificationAsync(rr, orderItem, order, _localizationSettings.DefaultAdminLanguageId);
+                //notify customer
+                await _workflowMessageService.SendNewReturnRequestCustomerNotificationAsync(rr, orderItem, order);
+
+                count++;
+            }
         }
 
-        [HttpPost]
-        public virtual IActionResult UploadFileReturnRequest()
+        model = await _returnRequestModelFactory.PrepareSubmitReturnRequestModelAsync(model, order);
+
+        if (count > 0)
         {
-            if (!_orderSettings.ReturnRequestsEnabled || !_orderSettings.ReturnRequestsAllowFiles)
-            {
-                return Json(new
-                {
-                    success = false,
-                    downloadGuid = Guid.Empty,
-                });
-            }
+            model.Result = _returnRequestSettings.UseEuWithdrawalLocales
+                ? await _localizationService.GetResourceAsync("ReturnRequests.Withdrawal.Submitted")
+                : await _localizationService.GetResourceAsync("ReturnRequests.Submitted");
+        }
+        else
+        {
+            ModelState.AddModelError("", await _localizationService.GetResourceAsync("ReturnRequests.NoItemsSubmitted"));
+        }
 
-            var httpPostedFile = Request.Form.Files.FirstOrDefault();
-            if (httpPostedFile == null)
-            {
-                return Json(new
-                {
-                    success = false,
-                    message = "No file uploaded",
-                    downloadGuid = Guid.Empty,
-                });
-            }
+        return View(model);
+    }
 
-            var fileBinary = _downloadService.GetDownloadBits(httpPostedFile);
-
-            var qqFileNameParameter = "qqfilename";
-            var fileName = httpPostedFile.FileName;
-            if (string.IsNullOrEmpty(fileName) && Request.Form.ContainsKey(qqFileNameParameter))
-                fileName = Request.Form[qqFileNameParameter].ToString();
-            //remove path (passed in IE)
-            fileName = _fileProvider.GetFileName(fileName);
-
-            var contentType = httpPostedFile.ContentType;
-
-            var fileExtension = _fileProvider.GetFileExtension(fileName);
-            if (!string.IsNullOrEmpty(fileExtension))
-                fileExtension = fileExtension.ToLowerInvariant();
-
-            var validationFileMaximumSize = _orderSettings.ReturnRequestsFileMaximumSize;
-            if (validationFileMaximumSize > 0)
-            {
-                //compare in bytes
-                var maxFileSizeBytes = validationFileMaximumSize * 1024;
-                if (fileBinary.Length > maxFileSizeBytes)
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = string.Format(_localizationService.GetResource("ShoppingCart.MaximumUploadedFileSize"), validationFileMaximumSize),
-                        downloadGuid = Guid.Empty,
-                    });
-                }
-            }
-
-            var download = new Download
-            {
-                DownloadGuid = Guid.NewGuid(),
-                UseDownloadUrl = false,
-                DownloadUrl = "",
-                DownloadBinary = fileBinary,
-                ContentType = contentType,
-                //we store filename without extension for downloads
-                Filename = _fileProvider.GetFileNameWithoutExtension(fileName),
-                Extension = fileExtension,
-                IsNew = true
-            };
-            _downloadService.InsertDownload(download);
-
-            //when returning JSON the mime-type must be set to text/plain
-            //otherwise some browsers will pop-up a "Save As" dialog.
+    [HttpPost]
+    [IgnoreAntiforgeryToken]
+    public virtual async Task<IActionResult> UploadFileReturnRequest()
+    {
+        if (!_returnRequestSettings.ReturnRequestsEnabled || !_returnRequestSettings.ReturnRequestsAllowFiles)
+        {
             return Json(new
             {
-                success = true,
-                message = _localizationService.GetResource("ShoppingCart.FileUploaded"),
-                downloadUrl = Url.Action("GetFileUpload", "Download", new { downloadId = download.DownloadGuid }),
-                downloadGuid = download.DownloadGuid,
+                success = false,
+                downloadGuid = Guid.Empty,
             });
         }
 
-        #endregion
+        var httpPostedFile = await Request.GetFirstOrDefaultFileAsync();
+        if (httpPostedFile == null)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "No file uploaded",
+                downloadGuid = Guid.Empty,
+            });
+        }
+
+        var fileBinary = await _downloadService.GetDownloadBitsAsync(httpPostedFile);
+
+        var fileName = httpPostedFile.FileName;
+
+        //remove path (passed in IE)
+        fileName = _fileProvider.GetFileName(fileName);
+
+        var contentType = httpPostedFile.ContentType;
+
+        var fileExtension = _fileProvider.GetFileExtension(fileName);
+        if (!string.IsNullOrEmpty(fileExtension))
+            fileExtension = fileExtension.ToLowerInvariant();
+
+        var validationFileMaximumSize = _returnRequestSettings.ReturnRequestsFileMaximumSize;
+        if (validationFileMaximumSize > 0)
+        {
+            //compare in bytes
+            var maxFileSizeBytes = validationFileMaximumSize * 1024;
+            if (fileBinary.Length > maxFileSizeBytes)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = string.Format(await _localizationService.GetResourceAsync("ShoppingCart.MaximumUploadedFileSize"), validationFileMaximumSize),
+                    downloadGuid = Guid.Empty,
+                });
+            }
+        }
+
+        var download = new Download
+        {
+            DownloadGuid = Guid.NewGuid(),
+            UseDownloadUrl = false,
+            DownloadUrl = "",
+            DownloadBinary = fileBinary,
+            ContentType = contentType,
+            //we store filename without extension for downloads
+            Filename = _fileProvider.GetFileNameWithoutExtension(fileName),
+            Extension = fileExtension,
+            IsNew = true
+        };
+        await _downloadService.InsertDownloadAsync(download);
+
+        //when returning JSON the mime-type must be set to text/plain
+        //otherwise some browsers will pop-up a "Save As" dialog.
+        return Json(new
+        {
+            success = true,
+            message = await _localizationService.GetResourceAsync("ShoppingCart.FileUploaded"),
+            downloadUrl = Url.RouteUrl(NopRouteNames.Standard.DOWNLOAD_GET_FILE_UPLOAD, new { downloadId = download.DownloadGuid }),
+            downloadGuid = download.DownloadGuid,
+        });
     }
+
+    #endregion
 }

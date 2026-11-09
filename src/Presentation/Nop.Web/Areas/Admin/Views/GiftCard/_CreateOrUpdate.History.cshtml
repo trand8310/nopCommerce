@@ -1,5 +1,5 @@
 @model GiftCardModel
-<div class="panel-body">
+<div class="card-body">
     @await Html.PartialAsync("Table", new DataTablesModel
     {
         Name = "usagehistory-grid",
@@ -11,7 +11,7 @@
             new ColumnProperty(nameof(GiftCardUsageHistoryModel.CreatedOn))
             {
                 Title = T("Admin.GiftCards.History.CreatedOn").Text,
-                Width = "200",
+                Width = "180",
                 Render = new RenderDate()
             },
             new ColumnProperty(nameof(GiftCardUsageHistoryModel.OrderId))
@@ -23,15 +23,14 @@
             },
             new ColumnProperty(nameof(GiftCardUsageHistoryModel.UsedValue))
             {
-                Title = T("Admin.GiftCards.History.UsedValue").Text,
-                Width = "200"
+                Title = T("Admin.GiftCards.History.UsedValue").Text
             }
         }
     })
-    <script>
+    <script asp-location="Footer">
         function renderColumnOrderNumber(data, type, row, meta) {
             var textRenderer = $.fn.dataTable.render.text().display;
-            return '<a class="btn btn-default" href="@Url.Content("~/Admin/Order/Edit/")' + row.OrderId + '"><i class="fa fa-eye"></i>' + textRenderer(row.CustomOrderNumber) + ' - @T("Admin.Common.View")</a>';
+            return '<a class="btn btn-default" href="@Url.Content("~/Admin/Order/Edit/")' + row.OrderId + '"><i class="far fa-eye"></i>' + textRenderer(row.CustomOrderNumber) + ' - @T("Admin.Common.View").Text</a>';
         }
     </script>
 </div>

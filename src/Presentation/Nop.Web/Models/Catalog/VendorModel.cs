@@ -1,30 +1,30 @@
-﻿using System.Collections.Generic;
-using Nop.Web.Framework.Models;
+﻿using Nop.Web.Framework.Models;
+using Nop.Web.Framework.Models.ArtificialIntelligence;
 using Nop.Web.Models.Media;
 
-namespace Nop.Web.Models.Catalog
+namespace Nop.Web.Models.Catalog;
+
+public partial record VendorModel : BaseNopEntityModel, IMetaTagsSupportedModel
 {
-    public partial class VendorModel : BaseNopEntityModel
+    public VendorModel()
     {
-        public VendorModel()
-        {
-            PictureModel = new PictureModel();
-            Products = new List<ProductOverviewModel>();
-            PagingFilteringContext = new CatalogPagingFilteringModel();
-        }
-
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string MetaKeywords { get; set; }
-        public string MetaDescription { get; set; }
-        public string MetaTitle { get; set; }
-        public string SeName { get; set; }
-        public bool AllowCustomersToContactVendors { get; set; }
-
-        public PictureModel PictureModel { get; set; }
-
-        public CatalogPagingFilteringModel PagingFilteringContext { get; set; }
-
-        public IList<ProductOverviewModel> Products { get; set; }
+        PictureModel = new PictureModel();
+        CatalogProductsModel = new CatalogProductsModel();
+        ProductReviews = new VendorProductReviewsListModel();
     }
+
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string MetaKeywords { get; set; }
+    public string MetaDescription { get; set; }
+    public string MetaTitle { get; set; }
+    public string SeName { get; set; }
+    public bool AllowCustomersToContactVendors { get; set; }
+    public int? PmCustomerId { get; set; }
+
+    public PictureModel PictureModel { get; set; }
+
+    public CatalogProductsModel CatalogProductsModel { get; set; }
+
+    public VendorProductReviewsListModel ProductReviews { get; set; }
 }

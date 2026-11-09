@@ -1,29 +1,56 @@
 # create the build instance 
-FROM microsoft/dotnet:2.2-sdk AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
 WORKDIR /src                                                                    
 COPY ./src ./
 
-# restore solution
-RUN dotnet restore NopCommerce.sln
+# build solution   
+RUN dotnet build NopCommerce.sln --no-incremental -c Release
 
+# publish project
 WORKDIR /src/Presentation/Nop.Web   
-
-# build and publish project   
-RUN dotnet build Nop.Web.csproj -c Release -o /app                                         
 RUN dotnet publish Nop.Web.csproj -c Release -o /app/published
 
+WORKDIR /app/published
+
+RUN mkdir logs bin
+RUN chown -R app:app /app
+
+RUN chmod 775 App_Data \
+              App_Data/DataProtectionKeys \
+              bin \
+              logs \
+              Plugins \
+              wwwroot/bundles \
+              wwwroot/db_backups \
+              wwwroot/files/exportimport \
+              wwwroot/icons \
+              wwwroot/images \
+              wwwroot/images/thumbs \
+              wwwroot/images/uploaded \
+			  wwwroot/sitemaps
+
 # create the runtime instance 
-FROM microsoft/dotnet:2.2-aspnetcore-runtime-alpine AS runtime 
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime 
 
 # add globalization support
-RUN apk add --no-cache icu-libs
+RUN apk add --no-cache icu-libs icu-data-full
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 
-WORKDIR /app        
-RUN mkdir bin
-RUN mkdir logs  
-                                                            
+# installs required packages
+RUN apk add tiff --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/main/ --allow-untrusted
+RUN apk add libgdiplus --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community/ --allow-untrusted
+RUN apk add libc-dev tzdata gcompat --no-cache
+
+WORKDIR /app
+
 COPY --from=build /app/published .
-                            
+
+ENV ASPNETCORE_URLS=http://+:80
+EXPOSE 80
+
+USER app
 ENTRYPOINT ["dotnet", "Nop.Web.dll"]

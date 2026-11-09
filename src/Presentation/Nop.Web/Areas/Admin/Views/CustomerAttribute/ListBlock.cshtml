@@ -1,10 +1,10 @@
 ﻿@model CustomerAttributeSearchModel
 
-<div class="panel panel-default">
-    <div class="panel-heading">
+<div class="card card-default">
+    <div class="card-header">
         @T("Admin.Customers.CustomerAttributes")
     </div>
-    <div class="panel-body">
+    <div class="card-body">
         <p>
             <em>@T("Admin.Customers.CustomerAttributes.Description")</em>
         </p>
@@ -18,25 +18,22 @@
             {
                 new ColumnProperty(nameof(CustomerAttributeModel.Name))
                 {
-                    Title = T("Admin.Customers.CustomerAttributes.Fields.Name").Text,
-                    Width = "300"
+                    Title = T("Admin.Customers.CustomerAttributes.Fields.Name").Text
                 },
                 new ColumnProperty(nameof(CustomerAttributeModel.AttributeControlTypeName))
                 {
-                    Title = T("Admin.Customers.CustomerAttributes.Fields.AttributeControlType").Text,
-                    Width = "200"
+                    Title = T("Admin.Customers.CustomerAttributes.Fields.AttributeControlType").Text
                 },
                 new ColumnProperty(nameof(CustomerAttributeModel.IsRequired))
                 {
                     Title = T("Admin.Customers.CustomerAttributes.Fields.IsRequired").Text,
-                    Width = "200",
+                    Width = "100",
                     ClassName =  NopColumnClassDefaults.CenterAll,
                     Render = new RenderBoolean()
                 },
                 new ColumnProperty(nameof(CustomerAttributeModel.DisplayOrder))
                 {
                     Title = T("Admin.Customers.CustomerAttributes.Fields.DisplayOrder").Text,
-                    Width = "100",
                     ClassName =  NopColumnClassDefaults.CenterAll
                 },
                 new ColumnProperty(nameof(CustomerAttributeModel.Id))
@@ -49,9 +46,9 @@
             }
         })
     </div>
-    <div class="panel-footer">
+    <div class="card-footer">
         <a class="btn btn-primary" href="@Url.Action("Create", "CustomerAttribute")">
-            <i class="fa fa-plus-square"></i>
+            <i class="fas fa-square-plus"></i>
             @T("Admin.Common.AddNew")
         </a>
     </div>

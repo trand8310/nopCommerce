@@ -1,5 +1,5 @@
 ﻿@model MaintenanceModel
-<div class="panel-body">
+<div class="card-body">
     <p>
         @T("Admin.System.Maintenance.BackupDatabase.Description")
     </p>
@@ -43,8 +43,8 @@
         }
     })
 </div>
-<div class="panel-footer">
-    <button type="submit" id="backup-database" name="backup-database" class="btn btn-primary">
+<div class="card-footer">
+    <button type="button" id="backup-database" class="btn btn-primary">
         @T("Admin.System.Maintenance.BackupDatabase.BackupNow")
     </button>
     <script>
@@ -60,9 +60,17 @@
             showThrobber('@Html.Raw(JavaScriptEncoder.Default.Encode(T("Admin.System.Maintenance.BackupDatabase.Progress").Text))');
         };
 
-        $(document).ready(function () {
-            $("#backup-database").on("click", function () {
+        $(function() {
+            $("#backup-database-action-confirmation-submit-button").on("click", function () {
                 showProgress();
+
+                const opener = $("#backup-database");
+                opener.prop({
+                    name: "backup-database",
+                    type: "submit"
+                });
+
+                opener.click();
             });
         });
     </script>
@@ -74,14 +82,13 @@
     function renderDownload(data, type, row, meta) {
         var link = row.Link;
         
-        return '<a class="btn btn-default" href="' + link + '">@T("Admin.System.Maintenance.BackupDatabase.Download")</a>';
+        return '<a class="btn btn-default" href="' + link + '">@T("Admin.System.Maintenance.BackupDatabase.Download").Text</a>';
     }
     function renderRestore(data, type, row, meta) {
-        return '<button type="submit" class="btn btn-default" onclick="submitBackupAction(\'' + row.Name +'\',\'restore-backup\')"><i class="fa fa-database"></i>@T("Admin.System.Maintenance.BackupDatabase.Restore")</button>';
+        return '<button type="submit" class="btn btn-default" onclick="submitBackupAction(\'' + row.Name +'\',\'restore-backup\')"><i class="fas fa-database"></i>@T("Admin.System.Maintenance.BackupDatabase.Restore").Text</button>';
     }
     function renderDelete(data, type, row, meta) {
-        var link = row.Link;
-
-        return '<button type="submit" class="btn btn-default" onclick="submitBackupAction(\'' + row.Name + '\',\'delete-backup\')"><i class="fa fa-trash"></i>@T("Admin.System.Maintenance.BackupDatabase.Delete")</button>';
+        return '<button type="submit" class="btn btn-default" onclick="submitBackupAction(\'' + row.Name + '\',\'delete-backup\')"><i class="far fa-trash-can"></i>@T("Admin.System.Maintenance.BackupDatabase.Delete").Text</button>';
     }
 </script>
+<nop-action-confirmation asp-button-id="backup-database" />

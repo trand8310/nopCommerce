@@ -1,12 +1,17 @@
-﻿<script asp-location="Footer">
-    $(document).ready(function () {
+﻿
+<script asp-location="Footer">
+    $(function() {
         $('#eu-cookie-bar-notification').show();
 
         $('#eu-cookie-ok').on('click', function () {
+            var postData = {};
+            addAntiForgeryToken(postData);
+
             $.ajax({
                 cache: false,
                 type: "POST",
-                url: "@Url.RouteUrl("EuCookieLawAccept")",
+                data: postData,
+                url: "@Url.RouteUrl(NopRouteNames.Ajax.EU_COOKIE_LAW_ACCEPT)",
                 dataType: "json",
                 success: function (data, textStatus, jqXHR) {
                     $('#eu-cookie-bar-notification').hide();
@@ -23,7 +28,7 @@
         <div class="text">@T("EUCookieLaw.Description2")</div>
         <div class="buttons-more">
             <button type="button" class="ok-button button-1" id="eu-cookie-ok">@T("Common.OK")</button>
-            <a class="learn-more" href="@Url.RouteUrl("Topic", new { SeName = Html.GetTopicSeName("privacyinfo") })">@T("EUCookieLaw.LearnMore")</a>
+            <a class="learn-more" href="@await NopUrl.RouteTopicUrlAsync("privacyinfo")">@T("EUCookieLaw.LearnMore")</a>
         </div>
     </div>
 </div>

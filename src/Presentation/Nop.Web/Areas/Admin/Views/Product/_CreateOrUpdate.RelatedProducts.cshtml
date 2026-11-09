@@ -1,12 +1,12 @@
 ﻿@model ProductModel
-<div class="panel-body">
+<div class="card-body">
     <p>
         @T("Admin.Catalog.Products.RelatedProducts.Hint")
     </p>
     @if (Model.Id > 0)
     {
-        <div class="panel panel-default">
-            <div class="panel-body">
+        <div class="card card-default">
+            <div class="card-body">
 
                 @await Html.PartialAsync("Table", new DataTablesModel
                 {
@@ -25,7 +25,6 @@
                             new ColumnProperty(nameof(RelatedProductModel.DisplayOrder))
                             {
                                 Title = T("Admin.Catalog.Products.RelatedProducts.Fields.DisplayOrder").Text,
-                                Width = "150",
                                 ClassName = NopColumnClassDefaults.CenterAll,
                                 Editable = true,
                                 EditType = EditType.Number
@@ -33,14 +32,14 @@
                             new ColumnProperty(nameof(RelatedProductModel.ProductId2))
                             {
                                 Title = T("Admin.Common.View").Text,
-                                Width = "150",
+                                Width = "100",
                                 ClassName = NopColumnClassDefaults.Button,
                                 Render = new RenderButtonView(new DataUrl("~/Admin/Product/Edit/", nameof(RelatedProductModel.Product2Name)))
                             },
                             new ColumnProperty(nameof(RelatedProductModel.Id))
                             {
                                 Title = T("Admin.Common.Edit").Text,
-                                Width = "200",
+                                Width = "100",
                                 ClassName =  NopColumnClassDefaults.Button,
                                 Render = new RenderButtonsInlineEdit()
                             },
@@ -54,13 +53,13 @@
                         }
                 })
             </div>
-            <div class="panel-footer">
+            <div class="card-footer">
                 <button type="submit" id="btnAddNewRelatedProduct" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("RelatedProductAddPopup", "Product", new {productId = Model.Id, btnId = "btnRefreshRelatedProducts", formId = "product-form"}))', 800, 800, true); return false;">
                     @T("Admin.Catalog.Products.RelatedProducts.AddNew")
                 </button>
-                <input type="submit" id="btnRefreshRelatedProducts" style="display: none" />
+                <button type="submit" id="btnRefreshRelatedProducts" style="display: none"></button>
                 <script>
-                    $(document).ready(function () {
+                    $(function() {
                         $('#btnRefreshRelatedProducts').click(function () {
                             //refresh grid
                             updateTable('#relatedproducts-grid');
@@ -75,8 +74,8 @@
     }
     else
     {
-        <div class="panel panel-default">
-            <div class="panel-body">
+        <div class="card card-default">
+            <div class="card-body">
                 @T("Admin.Catalog.Products.RelatedProducts.SaveBeforeEdit")
             </div>
         </div>

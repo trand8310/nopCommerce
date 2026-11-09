@@ -1,8 +1,8 @@
 ﻿@using Nop.Plugin.Shipping.FixedByWeightByTotal.Models
 @using Nop.Web.Framework.Models.DataTables
-<div class="panel-group basic-setting">
-    <div class="panel panel-default">
-        <div class="panel-body">
+<div class="cards-group basic-setting">
+    <div class="card card-default">
+        <div class="card-body">
             @await Html.PartialAsync("Table", new DataTablesModel
             {
                 Name = "shipping-rate-grid",
@@ -14,8 +14,7 @@
                 {
                     new ColumnProperty(nameof(FixedRateModel.ShippingMethodName))
                     {
-                        Title = T("Plugins.Shipping.FixedByWeightByTotal.Fields.ShippingMethod").Text,
-                        Width = "400"
+                        Title = T("Plugins.Shipping.FixedByWeightByTotal.Fields.ShippingMethod").Text
                     },
                     new ColumnProperty(nameof(FixedRateModel.Rate))
                     {
@@ -23,6 +22,13 @@
                         Width = "200",
                         Editable = true,
                         EditType = EditType.Number	 
+                    },
+                    new ColumnProperty(nameof(FixedRateModel.TransitDays))
+                    {
+                        Title = T("Plugins.Shipping.FixedByWeightByTotal.Fields.TransitDays").Text,
+                        Width = "200",
+                        Editable = true,
+                        EditType = EditType.String	 
                     },
                     new ColumnProperty(nameof(FixedRateModel.ShippingMethodId))
                     {
@@ -36,3 +42,8 @@
         </div>
     </div>
 </div>
+
+@if(await Html.IsTourActiveAsync())
+{
+    @await Html.PartialAsync("~/Plugins/Shipping.FixedByWeightByTotal/Views/_FixedRate.Tour.cshtml")
+}

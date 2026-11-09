@@ -1,11 +1,11 @@
 ﻿@model ProductReviewReviewTypeMappingSearchModel
 
-@await Component.InvokeAsync("AdminWidget", new { widgetZone = AdminWidgetZones.ProductReviewDetailsTop, additionalData = Model })
-<div class="panel panel-default">
-    <div class="panel-heading">
+@await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.ProductReviewDetailsTop, additionalData = Model })
+<div class="card card-default">
+    <div class="card-header">
         @T("Admin.Settings.ReviewType")
     </div>
-    <div class="panel-body">
+    <div class="card-body">
         @await Html.PartialAsync("Table", new DataTablesModel
    {
        Name = "reviewext-grid",
@@ -16,13 +16,11 @@
             {
                 new ColumnProperty(nameof(ProductReviewReviewTypeMappingModel.Name))
                 {
-                    Title = T("Admin.Catalog.AdditionalProductReviews.Fields.Name").Text,
-                    Width = "300"
+                    Title = T("Admin.Catalog.AdditionalProductReviews.Fields.Name").Text
                 },
                 new ColumnProperty(nameof(ProductReviewReviewTypeMappingModel.Rating))
                 {
-                    Title = T("Admin.Catalog.AdditionalProductReviews.Fields.Rating").Text,
-                    Width = "100"
+                    Title = T("Admin.Catalog.AdditionalProductReviews.Fields.Rating").Text
                 },
                 new ColumnProperty(nameof(ProductReviewReviewTypeMappingModel.VisibleToAllCustomers))
                 {

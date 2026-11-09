@@ -1,8 +1,9 @@
 ﻿@model ReviewTypeSearchModel
 
-<div class="panel-body">
+<div class="card-body">
     <p>
-        <em>@T("Admin.Settings.ReviewType.Description")</em>
+        @T("Admin.Settings.ReviewType.Description")
+        <nop-doc-reference asp-string-resource="@T("Admin.Documentation.Reference.ProductReviews", Docs.ProductReviews + Utm.OnAdmin)" asp-add-wrapper="false"/>
     </p>
     @await Html.PartialAsync("Table", new DataTablesModel
     {
@@ -14,8 +15,7 @@
         {
             new ColumnProperty(nameof(ReviewTypeModel.Name))
             {
-                Title = T("Admin.Settings.ReviewType.Fields.Name").Text,
-                Width = "300"
+                Title = T("Admin.Settings.ReviewType.Fields.Name").Text
             },
             new ColumnProperty(nameof(ReviewTypeModel.IsRequired))
             {
@@ -47,9 +47,9 @@
         }
     })
 </div>    
-<div class="panel-footer">
+<div class="card-footer">
     <a class="btn btn-primary" href="@Url.Action("Create", "ReviewType")">
-        <i class="fa fa-plus-square"></i>
+        <i class="fas fa-square-plus"></i>
         @T("Admin.Common.AddNew")
     </a>
 </div>

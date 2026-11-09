@@ -1,28 +1,31 @@
-using System.Collections.Generic;
+﻿using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Seo;
 
-namespace Nop.Core.Domain.Catalog
+namespace Nop.Core.Domain.Catalog;
+
+/// <summary>
+/// Represents a product tag
+/// </summary>
+public partial class ProductTag : BaseEntity, ILocalizedEntity, ISlugSupported, IMetaTagsSupported
 {
     /// <summary>
-    /// Represents a product tag
+    /// Gets or sets the name
     /// </summary>
-    public partial class ProductTag : BaseEntity, ILocalizedEntity, ISlugSupported
-    {
-        private ICollection<ProductProductTagMapping> _productProductTagMappings;
+    public string Name { get; set; }
 
-        /// <summary>
-        /// Gets or sets the name
-        /// </summary>
-        public string Name { get; set; }
+    /// <summary>
+    /// Gets or sets the meta description
+    /// </summary>
+    public string MetaDescription { get; set; }
 
-        /// <summary>
-        /// Gets or sets product-product tag mappings
-        /// </summary>
-        public virtual ICollection<ProductProductTagMapping> ProductProductTagMappings
-        {
-            get => _productProductTagMappings ?? (_productProductTagMappings = new List<ProductProductTagMapping>());
-            protected set => _productProductTagMappings = value;
-        }
-    }
+    /// <summary>
+    /// Gets or sets the meta keywords
+    /// </summary>
+    public string MetaKeywords { get; set; }
+
+    /// <summary>
+    /// Gets or sets the meta title
+    /// </summary>
+    public string MetaTitle { get; set; }
 }

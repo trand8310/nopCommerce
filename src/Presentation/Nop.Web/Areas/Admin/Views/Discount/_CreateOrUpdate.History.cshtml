@@ -1,6 +1,6 @@
 @model DiscountModel
 
-<div class="panel-body">
+<div class="card-body">
     @await Html.PartialAsync("Table", new DataTablesModel
     {
         Name = "usagehistory-grid",
@@ -13,7 +13,7 @@
                 new ColumnProperty(nameof(DiscountUsageHistoryModel.CreatedOn))
                 {
                     Title = T("Admin.Promotions.Discounts.History.CreatedOn").Text,
-                    Width = "200",
+                    Width = "180",
                     Render = new RenderDate()
                 },
                 new ColumnProperty(nameof(DiscountUsageHistoryModel.CustomOrderNumber))
@@ -25,8 +25,7 @@
                 },
                 new ColumnProperty(nameof(DiscountUsageHistoryModel.OrderTotal))
                 {
-                    Title = T("Admin.Promotions.Discounts.History.OrderTotal").Text,
-                    Width = "200"
+                    Title = T("Admin.Promotions.Discounts.History.OrderTotal").Text
                 },
                 new ColumnProperty(nameof(DiscountUsageHistoryModel.Id))
                 {
@@ -38,11 +37,11 @@
             }
     })
 
-    <script>
+    <script asp-location="Footer">
         function renderColumnOrderInfo(data, type, row, meta) {
             if (row.OrderId > 0) {
                 var textRenderer = $.fn.dataTable.render.text().display;
-                return '<a class="btn btn-default" href="@Url.Content("~/Admin/Order/Edit/")' + row.OrderId + '"><i class="fa fa-eye"></i>' + textRenderer(row.CustomOrderNumber) + ' - @T("Admin.Common.View")</a>';
+                return '<a class="btn btn-default" href="@Url.Content("~/Admin/Order/Edit/")' + row.OrderId + '"><i class="far fa-eye"></i>' + textRenderer(row.CustomOrderNumber) + ' - @T("Admin.Common.View").Text</a>';
             } else {
                 return 'order is deleted';
             }

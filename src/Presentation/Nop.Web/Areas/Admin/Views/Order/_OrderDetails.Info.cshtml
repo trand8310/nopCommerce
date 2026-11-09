@@ -1,4 +1,4 @@
-﻿@model OrderModel
+@model OrderModel
 
 @using Nop.Core.Domain.Tax;
 @using Nop.Core.Domain.Orders;
@@ -7,77 +7,40 @@
 @if (!Model.IsLoggedInAsVendor)
 {
     <script>
-        $(document).ready(function () {
+        $(function() {
             toggleChangeOrderStatus(false);
             toggleOrderTotals(false);
-            toggleCC(false);
         });
 
         function toggleChangeOrderStatus(editmode) {
             if (editmode) {
-                $('#pnlChangeOrderStatus').show();
-                $('#btnChangeOrderStatus').hide();
+                $('#pnlChangeOrderStatus').showElement();
+                $('#btnChangeOrderStatus').hideElement();
             } else {
-                $('#pnlChangeOrderStatus').hide();
-                $('#btnChangeOrderStatus').show();
+                $('#pnlChangeOrderStatus').hideElement();
+                $('#btnChangeOrderStatus').showElement();
             }
         }
 
         function toggleOrderTotals(editmode) {
             if (editmode) {
-                $('#trEditOrderTotals').show();
-                $('#btnEditOrderTotals').hide();
-                $('#btnSaveOrderTotals').show();
-                $('#btnCancelOrderTotals').show();
+                $('#trEditOrderTotals').showElement();
+                $('#btnEditOrderTotals').hideElement();
+                $('#btnSaveOrderTotals').showElement();
+                $('#btnCancelOrderTotals').showElement();
             } else {
-                $('#trEditOrderTotals').hide();
-                $('#btnEditOrderTotals').show();
-                $('#btnSaveOrderTotals').hide();
-                $('#btnCancelOrderTotals').hide();
+                $('#trEditOrderTotals').hideElement();
+                $('#btnEditOrderTotals').showElement();
+                $('#btnSaveOrderTotals').hideElement();
+                $('#btnCancelOrderTotals').hideElement();
             }
-        }
-
-        function toggleCC(editmode) {
-            if (editmode) {
-                $('#lblCardType').hide();
-                $('#@Html.IdFor(model => model.CardType)').show();
-                $('#lblCardName').hide();
-                $('#@Html.IdFor(model => model.CardName)').show();
-                $('#lblCardNumber').hide();
-                $('#@Html.IdFor(model => model.CardNumber)').show();
-                $('#lblCardCvv2').hide();
-                $('#@Html.IdFor(model => model.CardCvv2)').show();
-                $('#lblCardExpirationMonth').hide();
-                $('#@Html.IdFor(model => model.CardExpirationMonth)').show();
-                $('#lblCardExpirationYear').hide();
-                $('#@Html.IdFor(model => model.CardExpirationYear)').show();
-                $('#btnEditCC').hide();
-                $('#btnSaveCC').show();
-                $('#btnCancelCC').show();
-            } else {
-                $('#lblCardType').show();
-                $('#@Html.IdFor(model => model.CardType)').hide();
-                $('#lblCardName').show();
-                $('#@Html.IdFor(model => model.CardName)').hide();
-                $('#lblCardNumber').show();
-                $('#@Html.IdFor(model => model.CardNumber)').hide();
-                $('#lblCardCvv2').show();
-                $('#@Html.IdFor(model => model.CardCvv2)').hide();
-                $('#lblCardExpirationMonth').show();
-                $('#@Html.IdFor(model => model.CardExpirationMonth)').hide();
-                $('#lblCardExpirationYear').show();
-                $('#@Html.IdFor(model => model.CardExpirationYear)').hide();
-                $('#btnEditCC').show();
-                $('#btnSaveCC').hide();
-                $('#btnCancelCC').hide();
-            }
-        }
+        }        
     </script>
 }
-<div class="panel-body">
-    <div class="panel panel-default sub-panel">
-        <div class="panel-body">
-            <div class="form-group">
+<div class="card-body">
+    <div class="card card-default">
+        <div class="card-body">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="CustomOrderNumber" />
                 </div>
@@ -85,7 +48,7 @@
                     <div class="form-text-row">@Model.CustomOrderNumber</div>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="CreatedOn" />
                 </div>
@@ -93,7 +56,7 @@
                     <div class="form-text-row">@Model.CreatedOn</div>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="CustomerId" />
                 </div>
@@ -103,35 +66,33 @@
             </div>
             @if (!Model.IsLoggedInAsVendor)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderStatus" />
                     </div>
                     <div class="col-md-9">
                         <div class="input-group input-group-short">
-                            <div class="input-group-text">
-                                <strong>
-                                    <div class="form-text-row">@Model.OrderStatus</div>
-                                </strong>
+                            <div class="input-group-text align-items-start">
+                                <div class="font-weight-bold">@Model.OrderStatus</div>
                             </div>
                             <div class="input-group-btn">
                                 @if (Model.CanCancelOrder)
                                 {
-                                    <button type="submit" name="cancelorder" id="cancelorder" class="btn bg-red" style="margin-right: 3px;">
+                                    <button type="submit" name="cancelorder" id="cancelorder" class="btn btn-danger" style="margin-right: 3px;">
                                         @T("Admin.Orders.Fields.OrderStatus.Cancel")
                                     </button>
                                     <nop-action-confirmation asp-button-id="cancelorder" />
                                 }
-                                <button type="submit" name="btnChangeOrderStatus" onclick="toggleChangeOrderStatus(true);return false;" id="btnChangeOrderStatus" class="btn btn-primary">
+                                <button type="submit" name="btnChangeOrderStatus" onclick="toggleChangeOrderStatus(true);return false;" id="btnChangeOrderStatus" class="btn btn-primary" >
                                     @T("Admin.Orders.Fields.OrderStatus.Change")
                                 </button>
-                                <div id="pnlChangeOrderStatus" style="margin-top: 3px;">
-                                    <nop-select asp-for="OrderStatusId" asp-items="@(((OrderStatus) Model.OrderStatusId).ToSelectList())" />
-                                    <button type="submit" name="btnSaveOrderStatus" id="btnSaveOrderStatus" class="btn btn-primary" style="margin-left: 3px">
+                                <div id="pnlChangeOrderStatus">
+                                    <nop-select asp-for="OrderStatusId" asp-items="@(await ((OrderStatus) Model.OrderStatusId).ToSelectListAsync())" class="mt-1"/>
+                                    <button type="submit" name="btnSaveOrderStatus" id="btnSaveOrderStatus" class="btn btn-primary mt-1 mr-1" >
                                         @T("Admin.Common.Save")
                                     </button>
                                     <nop-action-confirmation asp-button-id="btnSaveOrderStatus" />
-                                    <button type="submit" name="btnCancelOrderStatus" onclick="toggleChangeOrderStatus(false);return false;" id="btnCancelOrderStatus" class="btn bg-teal" style="margin-left: 3px">
+                                    <button type="submit" name="btnCancelOrderStatus" onclick="toggleChangeOrderStatus(false);return false;" id="btnCancelOrderStatus" class="btn btn-secondary mt-1" >
                                         @T("Admin.Common.Cancel")
                                     </button>
                                     <div class="input-group-btn-hint">
@@ -148,7 +109,7 @@
                 //vendors should see whether or order is cancelled
                 if (Model.OrderStatusId == (int)OrderStatus.Cancelled)
                 {
-                    <div class="form-group">
+                    <div class="form-group row">
                         <div class="col-md-3">
                             &nbsp;
                         </div>
@@ -164,32 +125,32 @@
     </div>
     @if (!Model.IsLoggedInAsVendor)
     {
-    <div class="panel panel-default sub-panel">
-        <div class="panel-body">
-            <div class="form-group">
+    <div class="card card-default">
+        <div class="card-body">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <div class="label-wrapper">
-                        <label class="control-label">@T("Admin.Orders.Fields.OrderSubtotal")</label>
+                        <label class="col-form-label">@T("Admin.Orders.Fields.OrderSubtotal")</label>
                         <div class="ico-help" title="@T("Admin.Orders.Fields.OrderSubtotal.Hint")">
-                            <i class="fa fa-question-circle"></i>
+                            <i class="fas fa-circle-question"></i>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-9">
                     <div class="row">
                         @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax)
                         {
-                            <div class="col-md-2">
+                            <div class="col-md-6">
                                 <div class="form-text-row">
-                                    @Model.OrderSubtotalInclTax <strong>@T("Admin.Orders.Fields.OrderSubtotalInclTax")</strong>
+                                    @Html.Raw(Model.OrderSubtotalInclTax) <strong>@T("Admin.Orders.Fields.OrderSubtotalInclTax")</strong>
                                 </div>
                             </div>
                         }
                         @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax)
                         {
-                            <div class="col-md-10">
+                            <div class="col-md-6">
                                 <div class="form-text-row">
-                                    @Model.OrderSubtotalExclTax <strong>@T("Admin.Orders.Fields.OrderSubtotalExclTax")</strong>
+                                    @Html.Raw(Model.OrderSubtotalExclTax) <strong>@T("Admin.Orders.Fields.OrderSubtotalExclTax")</strong>
                                 </div>
                             </div>
                         }
@@ -199,30 +160,30 @@
             @if (((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax) && !string.IsNullOrEmpty(Model.OrderSubTotalDiscountInclTax)) ||
                ((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax) && !string.IsNullOrEmpty(Model.OrderSubTotalDiscountExclTax)))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <div class="label-wrapper">
-                            <label class="control-label">@T("Admin.Orders.Fields.OrderSubTotalDiscount")</label>
+                            <label class="col-form-label">@T("Admin.Orders.Fields.OrderSubTotalDiscount")</label>
                             <div class="ico-help" title="@T("Admin.Orders.Fields.OrderSubTotalDiscount.Hint")">
-                                <i class="fa fa-question-circle"></i>
+                                <i class="fas fa-circle-question"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-9">
                         <div class="row">
                             @if ((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax) && !string.IsNullOrEmpty(Model.OrderSubTotalDiscountInclTax))
                             {
-                                <div class="col-md-2">
+                                <div class="col-md-6">
                                     <div class="form-text-row">
-                                        @Model.OrderSubTotalDiscountInclTax <strong>@T("Admin.Orders.Fields.OrderSubTotalDiscountInclTax")</strong>
+                                        @Html.Raw(Model.OrderSubTotalDiscountInclTax) <strong>@T("Admin.Orders.Fields.OrderSubTotalDiscountInclTax")</strong>
                                     </div>
                                 </div>
                             }
                             @if ((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax) && !string.IsNullOrEmpty(Model.OrderSubTotalDiscountExclTax))
                             {
-                                <div class="col-md-10">
+                                <div class="col-md-6">
                                     <div class="form-text-row">
-                                        @Model.OrderSubTotalDiscountExclTax <strong>@T("Admin.Orders.Fields.OrderSubTotalDiscountExclTax")</strong>
+                                        @Html.Raw(Model.OrderSubTotalDiscountExclTax) <strong>@T("Admin.Orders.Fields.OrderSubTotalDiscountExclTax")</strong>
                                     </div>
                                 </div>
                             }
@@ -230,30 +191,30 @@
                     </div>
                 </div>
             }
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <div class="label-wrapper">
-                        <label class="control-label">@T("Admin.Orders.Fields.OrderShipping")</label>
+                        <label class="col-form-label">@T("Admin.Orders.Fields.OrderShipping")</label>
                         <div class="ico-help" title="@T("Admin.Orders.Fields.OrderShipping.Hint")">
-                            <i class="fa fa-question-circle"></i>
+                            <i class="fas fa-circle-question"></i>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-9">
                     <div class="row">
                         @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax)
                         {
-                            <div class="col-md-2">
+                            <div class="col-md-6">
                                 <div class="form-text-row">
-                                    @Model.OrderShippingInclTax <strong>@T("Admin.Orders.Fields.OrderShippingInclTax")</strong>
+                                    @Html.Raw(Model.OrderShippingInclTax) <strong>@T("Admin.Orders.Fields.OrderShippingInclTax")</strong>
                                 </div>
                             </div>
                         }
                         @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax)
                         {
-                            <div class="col-md-2">
+                            <div class="col-md-6">
                                 <div class="form-text-row">
-                                    @Model.OrderShippingExclTax <strong>@T("Admin.Orders.Fields.OrderShippingExclTax")</strong>
+                                    @Html.Raw(Model.OrderShippingExclTax) <strong>@T("Admin.Orders.Fields.OrderShippingExclTax")</strong>
                                 </div>
                             </div>
                         }
@@ -263,30 +224,30 @@
             @if (((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax) && !string.IsNullOrEmpty(Model.PaymentMethodAdditionalFeeInclTax)) ||
                ((Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax) && !string.IsNullOrEmpty(Model.PaymentMethodAdditionalFeeExclTax)))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <div class="label-wrapper">
-                            <label class="control-label">@T("Admin.Orders.Fields.PaymentMethodAdditionalFee")</label>
+                            <label class="col-form-label">@T("Admin.Orders.Fields.PaymentMethodAdditionalFee")</label>
                             <div class="ico-help" title="@T("Admin.Orders.Fields.PaymentMethodAdditionalFee.Hint")">
-                                <i class="fa fa-question-circle"></i>
+                                <i class="fas fa-circle-question"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-9">
                         <div class="row">
                             @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.IncludingTax)
                             {
-                                <div class="col-md-2">
+                                <div class="col-md-6">
                                     <div class="form-text-row">
-                                        @Model.PaymentMethodAdditionalFeeInclTax <strong>@T("Admin.Orders.Fields.PaymentMethodAdditionalFeeInclTax")</strong>
+                                        @Html.Raw(Model.PaymentMethodAdditionalFeeInclTax) <strong>@T("Admin.Orders.Fields.PaymentMethodAdditionalFeeInclTax")</strong>
                                     </div>
                                 </div>
                             }
                             @if (Model.AllowCustomersToSelectTaxDisplayType || Model.TaxDisplayType == TaxDisplayType.ExcludingTax)
                             {
-                                <div class="col-md-2">
+                                <div class="col-md-6">
                                     <div class="form-text-row">
-                                        @Model.PaymentMethodAdditionalFeeExclTax <strong>@T("Admin.Orders.Fields.PaymentMethodAdditionalFeeExclTax")</strong>
+                                        @Html.Raw(Model.PaymentMethodAdditionalFeeExclTax) <strong>@T("Admin.Orders.Fields.PaymentMethodAdditionalFeeExclTax")</strong>
                                     </div>
                                 </div>
                             }
@@ -298,41 +259,41 @@
             {
                 foreach (var tr in Model.TaxRates)
                 {
-                    <div class="form-group">
+                    <div class="form-group row">
                         <div class="col-md-3">
                             <nop-label asp-for="Tax" /> <span style="padding-top: 7px;margin-right: 5px;float: right;">@tr.Rate%</span>
                         </div>
                         <div class="col-md-9">
-                            @tr.Value
+                            @Html.Raw(tr.Value)
                         </div>
                     </div>
                 }
             }
             @if (Model.DisplayTax)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="Tax" />
                     </div>
                     <div class="col-md-9">
-                        <div class="form-text-row">@Model.Tax</div>
+                        <div class="form-text-row">@Html.Raw(Model.Tax)</div>
                     </div>
                 </div>
             }
             @if (!string.IsNullOrEmpty(Model.OrderTotalDiscount))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderTotalDiscount" />
                     </div>
                     <div class="col-md-9">
-                        <div class="form-text-row">@Model.OrderTotalDiscount</div>
+                        <div class="form-text-row">@Html.Raw(Model.OrderTotalDiscount)</div>
                     </div>
                 </div>
             }
             @foreach (var gc in Model.GiftCards)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="@Model.GiftCards[0].CouponCode" />
                         <span style="padding-top: 7px;margin-right: 5px;float: right;">(@(gc.CouponCode))</span>
@@ -344,7 +305,7 @@
             }
             @if (Model.RedeemedRewardPoints > 0)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="RedeemedRewardPoints" />
                     </div>
@@ -353,17 +314,17 @@
                     </div>
                 </div>
             }
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="OrderTotal" />
                 </div>
                 <div class="col-md-9">
-                    <div class="form-text-row">@Model.OrderTotal</div>
+                    <div class="form-text-row">@Html.Raw(Model.OrderTotal)</div>
                 </div>
             </div>
             @if (!string.IsNullOrEmpty(Model.RefundedAmount))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="RefundedAmount" />
                     </div>
@@ -374,7 +335,7 @@
             }
             @if (Model.UsedDiscounts.Count > 0)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="UsedDiscounts" />
                     </div>
@@ -391,76 +352,76 @@
                     </div>
                 </div>
             }
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="Profit" />
                 </div>
                 <div class="col-md-9">
-                    <div class="form-text-row">@Model.Profit</div>
+                    <div class="form-text-row">@Html.Raw(Model.Profit)</div>
                 </div>
             </div>
             <div id="trEditOrderTotals">
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderSubtotalInclTaxValue" />
                     </div>
                     <div class="col-md-9">
-                        <div class="pull-left margin-r-10">
+                        <div class="float-left margin-r-10">
                             @T("Admin.Orders.Fields.Edit.InclTax")
                             <nop-editor asp-for="OrderSubtotalInclTaxValue" />
                         </div>
-                        <div class="pull-left">
+                        <div class="float-left">
                             @T("Admin.Orders.Fields.Edit.ExclTax")
                             <nop-editor asp-for="OrderSubtotalExclTaxValue" />
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderSubTotalDiscountInclTaxValue" />
                     </div>
                     <div class="col-md-9">
-                        <div class="pull-left margin-r-10">
+                        <div class="float-left margin-r-10">
                             @T("Admin.Orders.Fields.Edit.InclTax")
                             <nop-editor asp-for="OrderSubTotalDiscountInclTaxValue" />
                         </div>
-                        <div class="pull-left">
+                        <div class="float-left">
                             @T("Admin.Orders.Fields.Edit.ExclTax")
                             <nop-editor asp-for="OrderSubTotalDiscountExclTaxValue" />
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderShippingInclTaxValue" />
                     </div>
                     <div class="col-md-9">
-                        <div class="pull-left margin-r-10">
+                        <div class="float-left margin-r-10">
                             @T("Admin.Orders.Fields.Edit.InclTax")
                             <nop-editor asp-for="OrderShippingInclTaxValue" />
                         </div>
-                        <div class="pull-left">
+                        <div class="float-left">
                             @T("Admin.Orders.Fields.Edit.ExclTax")
                             <nop-editor asp-for="OrderShippingExclTaxValue" />
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="PaymentMethodAdditionalFeeInclTaxValue" />
                     </div>
                     <div class="col-md-9">
-                        <div class="pull-left margin-r-10">
+                        <div class="float-left margin-r-10">
                             @T("Admin.Orders.Fields.Edit.InclTax")
                             <nop-editor asp-for="PaymentMethodAdditionalFeeInclTaxValue" />
                         </div>
-                        <div class="pull-left">
+                        <div class="float-left">
                             @T("Admin.Orders.Fields.Edit.ExclTax")
                             <nop-editor asp-for="PaymentMethodAdditionalFeeExclTaxValue" />
                         </div>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="TaxRatesValue" />
                     </div>
@@ -468,7 +429,7 @@
                         <nop-editor asp-for="TaxRatesValue" />
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="TaxValue" />
                     </div>
@@ -476,7 +437,7 @@
                         <nop-editor asp-for="TaxValue" />
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderTotalDiscountValue" />
                     </div>
@@ -484,7 +445,7 @@
                         <nop-editor asp-for="OrderTotalDiscountValue" />
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderTotalValue" />
                     </div>
@@ -493,128 +454,25 @@
                     </div>
                 </div>
             </div>
-            <div class="form-group">
-                <div class="col-md-9 col-md-offset-3">
+            <div class="form-group row">
+                <div class="col-md-9 offset-md-3">
                     <button type="submit" name="btnEditOrderTotals" onclick="toggleOrderTotals(true);return false;" id="btnEditOrderTotals" class="btn btn-primary">
                         @T("Admin.Orders.Fields.EditOrderTotals")
                     </button>
 
-                    <button type="submit" name="btnSaveOrderTotals" id="btnSaveOrderTotals" class="btn btn-primary">
+                    <button type="submit" name="btnSaveOrderTotals" id="btnSaveOrderTotals" class="btn btn-primary margin-r-5">
                         @T("Admin.Orders.Fields.SaveOrderTotals")
                     </button>
                     <nop-action-confirmation asp-button-id="btnSaveOrderTotals" />
 
-                    <button type="submit" name="btnCancelOrderTotals" onclick="toggleOrderTotals(false);return false;" id="btnCancelOrderTotals" class="btn bg-teal">
+                    <button type="submit" name="btnCancelOrderTotals" onclick="toggleOrderTotals(false);return false;" id="btnCancelOrderTotals" class="btn btn-secondary">
                         @T("Admin.Common.Cancel")
-                    </button>
+                    </button>                    
                 </div>
             </div>
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardType" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardType">
-                            <div class="form-text-row">@Model.CardType</div>
-                        </div>
-                        <nop-editor asp-for="CardType" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardName" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardName">
-                            <div class="form-text-row">@Model.CardName</div>
-                        </div>
-                        <nop-editor asp-for="CardName" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber || !string.IsNullOrEmpty(Model.CardNumber))
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardNumber" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardNumber">
-                            <div class="form-text-row">@Model.CardNumber</div>
-                        </div>
-                        <nop-editor asp-for="CardNumber" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardCvv2" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardCvv2">
-                            <div class="form-text-row">@Model.CardCvv2</div>
-                        </div>
-                        <nop-editor asp-for="CardCvv2" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardExpirationMonth" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardExpirationMonth">
-                            <div class="form-text-row">@Model.CardExpirationMonth</div>
-                        </div>
-                        <nop-editor asp-for="CardExpirationMonth" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-3">
-                        <nop-label asp-for="CardExpirationYear" />
-                    </div>
-                    <div class="col-md-9">
-                        <div id="lblCardExpirationYear">
-                            <div class="form-text-row">@Model.CardExpirationYear</div>
-                        </div>
-                        <nop-editor asp-for="CardExpirationYear" />
-                    </div>
-                </div>
-            }
-            @if (Model.AllowStoringCreditCardNumber)
-            {
-                <div class="form-group">
-                    <div class="col-md-9 col-md-offset-3">
-                        <button type="submit" name="btnEditCC" onclick="toggleCC(true);return false;" id="btnEditCC" class="btn btn-primary">
-                            @T("Admin.Orders.Fields.EditCC")
-                        </button>
-
-                        <button type="submit" name="btnSaveCC" id="btnSaveCC" class="btn btn-primary">
-                            @T("Admin.Orders.Fields.SaveCC")
-                        </button>
-                        <nop-action-confirmation asp-button-id="btnSaveCC" />
-
-                        <button type="submit" name="btnCancelCC" onclick="toggleCC(false);return false;" id="btnCancelCC" class="btn bg-teal">
-                            @T("Admin.Common.Cancel")
-                        </button>
-                    </div>
-                </div>
-            }
             @if (!string.IsNullOrEmpty(Model.AuthorizationTransactionId))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="AuthorizationTransactionId" />
                     </div>
@@ -625,7 +483,7 @@
             }
             @if (!string.IsNullOrEmpty(Model.CaptureTransactionId))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="CaptureTransactionId" />
                     </div>
@@ -636,7 +494,7 @@
             }
             @if (!string.IsNullOrEmpty(Model.SubscriptionTransactionId))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="SubscriptionTransactionId" />
                     </div>
@@ -645,16 +503,18 @@
                     </div>
                 </div>
             }
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="PaymentMethod" />
                 </div>
                 <div class="col-md-9">
                     <div class="form-text-row">@Model.PaymentMethod</div>
                 </div>
-            </div>
+            </div> 
+            
+            @await Component.InvokeAsync(typeof(AdminWidgetViewComponent), new { widgetZone = AdminWidgetZones.OrderDetailsInfoPaymentMethodAdditionalData, additionalData = Model })
 
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="PaymentStatus" />
                 </div>
@@ -665,8 +525,8 @@
             @if (Model.CanCapture || Model.CanMarkOrderAsPaid || Model.CanRefund || Model.CanRefundOffline ||
               Model.CanPartiallyRefund || Model.CanPartiallyRefundOffline || Model.CanVoid || Model.CanVoidOffline)
             {
-                <div class="form-group">
-                    <div class="col-md-9 col-md-offset-3">
+                <div class="form-group row">
+                    <div class="col-md-9 offset-md-3">
                         @if (!Model.IsLoggedInAsVendor)
                         {
                             if (Model.CanCapture)
@@ -735,9 +595,9 @@
                     </div>
                 </div>
             }
-            @if (Model.CustomValues != null && Model.CustomValues.Count > 0)
+            @if (Model.CustomValues?.Any() ?? false)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="CustomValues" />
                     </div>
@@ -747,7 +607,7 @@
                             {
                                 <ul class="common-list">
                                     <li>
-                                        @item.Key: @(item.Value != null ? item.Value.ToString() : "")
+                                        @item.Name: @(item.Value ?? string.Empty)
                                     </li>
                                 </ul>
                             }
@@ -758,9 +618,9 @@
         </div>
     </div>
     }
-    <div class="panel panel-default sub-panel">
-        <div class="panel-body">
-            <div class="form-group">
+    <div class="card card-default">
+        <div class="card-body">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="StoreName" />
                 </div>
@@ -770,7 +630,7 @@
             </div>
             @if (!Model.IsLoggedInAsVendor)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="OrderGuid" />
                     </div>
@@ -779,7 +639,7 @@
                     </div>
                 </div>
             }
-            <div class="form-group">
+            <div class="form-group row">
                 <div class="col-md-3">
                     <nop-label asp-for="CustomerIp" />
                 </div>
@@ -789,7 +649,7 @@
             </div>
             @if (Model.RecurringPaymentId > 0)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="RecurringPaymentId" />
                     </div>
@@ -800,7 +660,7 @@
             }
             @if (!string.IsNullOrEmpty(Model.VatNumber))
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="VatNumber" />
                     </div>
@@ -811,7 +671,7 @@
             }
             @if (Model.AffiliateId > 0)
             {
-                <div class="form-group">
+                <div class="form-group row">
                     <div class="col-md-3">
                         <nop-label asp-for="AffiliateId" />
                     </div>

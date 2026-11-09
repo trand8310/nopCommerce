@@ -1,19 +1,20 @@
 ﻿@model ApplyVendorModel
+
 @{
     Layout = "_ColumnsOne";
 
     //title
-    Html.AddTitleParts(T("PageTitle.Vendors.Apply").Text);
+    NopHtml.AddTitleParts(T("PageTitle.Vendors.Apply").Text);
     //page class
-    Html.AppendPageCssClassParts("html-apply-vendor-page");
+    NopHtml.AppendPageCssClassParts("html-apply-vendor-page");
 }
 <div class="page apply-vendor-page">
     <div class="page-title">
         <h1>@T("PageTitle.Vendors.Apply")</h1>
     </div>
     <div class="page-body">
-        @await Component.InvokeAsync("TopicBlock", new { systemName = "ApplyVendor" })
-        @await Component.InvokeAsync("Widget", new { widgetZone = PublicWidgetZones.ApplyVendorTop })
+        @await Component.InvokeAsync(typeof(TopicBlockViewComponent), new { systemName = "ApplyVendor" })
+        @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.ApplyVendorTop, additionalData = Model })
         @if (Model.DisableFormInput)
         {
             <div class="result">
@@ -22,19 +23,19 @@
         }
         else
         {
-            <form asp-route="ApplyVendorAccount" method="post" enctype="multipart/form-data">
+            <form asp-route="@NopRouteNames.General.APPLY_VENDOR_ACCOUNT" method="post" enctype="multipart/form-data">
                 <div asp-validation-summary="ModelOnly" class="message-error"></div>
-                <div class="fieldset">
+                <section class="fieldset">
                     <div class="form-fields">
                         <div class="inputs">
                             <label asp-for="Name" asp-postfix=":"></label>
-                            <input asp-for="Name" class="name" placeholder="@T("Vendors.ApplyAccount.Name.Hint")"/>
+                            <input asp-for="Name" class="name" placeholder="@T("Vendors.ApplyAccount.Name.Hint")" />
                             <nop-required />
                             <span asp-validation-for="Name"></span>
                         </div>
                         <div class="inputs">
                             <label asp-for="Email" asp-postfix=":"></label>
-                            <input asp-for="Email" class="name" placeholder="@T("Vendors.ApplyAccount.Email.Hint")"/>
+                            <input asp-for="Email" class="name" placeholder="@T("Vendors.ApplyAccount.Email.Hint")" />
                             <nop-required />
                             <span asp-validation-for="Email"></span>
                         </div>
@@ -43,20 +44,18 @@
                             <textarea asp-for="Description" class="description"></textarea>
                         </div>
                         <div class="inputs">
-                            <label>@T("Vendors.ApplyAccount.Picture"):</label>
-                            <input name="uploadedFile" type="file"/>
+                            <label for="picture-fileupload">@T("Vendors.ApplyAccount.Picture"):</label>
+                            <input id="picture-fileupload" name="uploadedFile" type="file" accept="image/*" />
                         </div>
                         @await Html.PartialAsync("_VendorAttributes", Model.VendorAttributes)
                         @if (Model.DisplayCaptcha)
                         {
-                            <div class="captcha-box">
-                                <nop-captcha />
-                            </div>
+                            <nop-captcha />
                         }
                         @if (Model.TermsOfServiceEnabled)
                         {
                             <script asp-location="Footer">
-                                $(document).ready(function() {
+                                $(function() {
                                     $('#apply-vendor').on('click', function() {
                                         if ($('#termsofservice').is(':checked')) {
                                             //do some stuff
@@ -76,11 +75,11 @@
                                 {
                                     <span class="read" id="read-acceptterms">@T("Vendors.ApplyAccount.AcceptTermsOfService.Read")</span>
                                     <script asp-location="Footer">
-                                        $(document).ready(function() {
+                                        $(function() {
                                             $('#read-acceptterms').on('click',
                                                 function (e) {
                                                     displayPopupContentFromUrl(
-                                                        '@Url.RouteUrl("TopicPopup", new {SystemName = "VendorTermsOfService"})',
+                                                        '@Url.RouteUrl(NopRouteNames.Ajax.TOPIC_POPUP, new { SystemName = "VendorTermsOfService" })',
                                                         '@T("Vendors.ApplyAccount.AcceptTermsOfService")');
                                                 });
                                         });
@@ -88,17 +87,17 @@
                                 }
                                 else
                                 {
-                                    <a class="read" id="read-acceptterms" href="@Url.RouteUrl("Topic", new {SeName = Html.GetTopicSeName("VendorTermsOfService") })">@T("Vendors.ApplyAccount.AcceptTermsOfService.Read")</a>
+                                    <a class="read" id="read-acceptterms" href="@await NopUrl.RouteTopicUrlAsync("VendorTermsOfService")">@T("Vendors.ApplyAccount.AcceptTermsOfService.Read")</a>
                                 }
                             </div>
                         }
                     </div>
-                </div>
-                <div class="buttons">
-                    <input type="submit" id="apply-vendor" name="apply-vendor" class="button-1 apply-vendor-button" value="@T("Vendors.ApplyAccount.Button")" />
-                </div>
+                </section>
+                <section class="buttons">
+                    <button type="submit" id="apply-vendor" name="apply-vendor" class="button-1 apply-vendor-button">@T("Vendors.ApplyAccount.Button")</button>
+                </section>
             </form>
         }
-        @await Component.InvokeAsync("Widget", new { widgetZone = PublicWidgetZones.ApplyVendorBottom })
+        @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.ApplyVendorBottom, additionalData = Model })
     </div>
 </div>

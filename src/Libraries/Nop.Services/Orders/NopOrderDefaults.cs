@@ -1,55 +1,90 @@
-﻿namespace Nop.Services.Orders
+﻿using Nop.Core.Caching;
+
+namespace Nop.Services.Orders;
+
+/// <summary>
+/// Represents default values related to orders services
+/// </summary>
+public static partial class NopOrderDefaults
 {
+    #region Caching defaults
+
+    #region Checkout attributes
+
     /// <summary>
-    /// Represents default values related to orders services
+    /// Gets a key for caching
     /// </summary>
-    public static partial class NopOrderDefaults
-    {
-        #region Checkout attributes
+    /// <remarks>
+    /// {0} : store ID
+    /// {1} : A value indicating whether we should exclude shippable attributes
+    /// </remarks>
+    public static CacheKey CheckoutAttributesAllCacheKey => new("Nop.checkoutattribute.all.{0}-{1}");
 
-        /// <summary>
-        /// Gets a key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : store ID
-        /// {1} : >A value indicating whether we should exclude shippable attributes
-        /// </remarks>
-        public static string CheckoutAttributesAllCacheKey => "Nop.checkoutattribute.all-{0}-{1}";
+    #endregion
 
-        /// <summary>
-        /// Gets a key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : checkout attribute ID
-        /// </remarks>
-        public static string CheckoutAttributesByIdCacheKey => "Nop.checkoutattribute.id-{0}";
+    #region ShoppingCart
 
-        /// <summary>
-        /// Gets a key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : checkout attribute ID
-        /// </remarks>
-        public static string CheckoutAttributeValuesAllCacheKey => "Nop.checkoutattributevalue.all-{0}";
+    /// <summary>
+    /// Gets a key for caching
+    /// </summary>
+    /// <remarks>
+    /// {0} : customer ID
+    /// {1} : shopping cart types
+    /// {2} : store ID
+    /// {3} : product ID
+    /// {4} : created from date
+    /// {5} : created to date
+    /// {6} : custom wishlist ID
+    /// </remarks>
+    public static CacheKey ShoppingCartItemsAllCacheKey => new("Nop.shoppingcartitem.all.{0}-{1}-{2}-{3}-{4}-{5}-{6}");
 
-        /// <summary>
-        /// Gets a key for caching
-        /// </summary>
-        /// <remarks>
-        /// {0} : checkout attribute value ID
-        /// </remarks>
-        public static string CheckoutAttributeValuesByIdCacheKey => "Nop.checkoutattributevalue.id-{0}";
+    /// <summary>
+    /// Gets a key pattern to clear cache
+    /// </summary>
+    /// <remarks>
+    /// {0} : customer identifier
+    /// </remarks>
+    public static string ShoppingCartItemsByCustomerPrefix => "Nop.shoppingcartitem.all.{0}";
 
-        /// <summary>
-        /// Gets a key pattern to clear cache
-        /// </summary>
-        public static string CheckoutAttributesPrefixCacheKey => "Nop.checkoutattribute.";
+    #endregion
 
-        /// <summary>
-        /// Gets a key pattern to clear cache
-        /// </summary>
-        public static string CheckoutAttributeValuesPrefixCacheKey => "Nop.checkoutattributevalue.";
+    #region Wishlist
 
-        #endregion
-    }
+    /// <summary>
+    /// Gets a key for caching
+    /// </summary>
+    /// <remarks>
+    /// {0} : customer ID
+    /// </remarks>
+    public static CacheKey CustomWishlistCacheKey => new("Nop.customwishlist.{0}");
+
+    #endregion
+
+    #region Perform order with lock
+
+    /// <summary>
+    /// Gets a key for caching
+    /// </summary>
+    /// <remarks>
+    /// {0} : customer identifier
+    /// </remarks>
+    public static CacheKey OrderWithLockCacheKey => new("Nop.Order.With.Lock.{0}");
+
+    #endregion
+
+    #endregion
+
+    #region Return requests
+
+    /// <summary>
+    /// Gets a name of generic attribute to store the value of 'WithdrawalToken'
+    /// </summary>
+    public static string WithdrawalTokenAttribute => "WithdrawalToken";
+
+    /// <summary>
+    /// Gets a name of generic attribute to store the value of 'WithdrawalTokenDateGenerated'
+    /// </summary>
+    public static string WithdrawalTokenDateGeneratedAttribute => "WithdrawalTokenDateGenerated";
+
+    #endregion
 }

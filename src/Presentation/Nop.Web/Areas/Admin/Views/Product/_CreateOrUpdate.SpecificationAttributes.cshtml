@@ -1,6 +1,6 @@
 ﻿@model ProductModel
 
-<div class="panel-body">
+<div class="card-body">
     <p>
         @T("Admin.Catalog.Products.SpecificationAttributes.Hint")
     </p>
@@ -9,8 +9,8 @@
         /*hide "add spec" table if no attributes are defined*/
         if (Model.HasAvailableSpecificationAttributes)
         {
-            <div class="panel panel-default">
-                <div class="panel-body">
+            <div class="card card-default">
+                <div class="card-body">
                     @await Html.PartialAsync("Table", new DataTablesModel
                     {
                         Name = "specificationattributes-grid",
@@ -21,18 +21,15 @@
                         {
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.AttributeTypeName))
                             {
-                                Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.AttributeType").Text,
-                                Width = "150"
+                                Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.AttributeType").Text
                             },
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.AttributeName))
                             {
-                                Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.SpecificationAttribute").Text,
-                                Width = "200"
+                                Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.SpecificationAttribute").Text
                             },
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.ValueRaw))
                             {
                                 Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.Value").Text,
-                                Width = "200",
                                 Encode = false
                             },
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.AllowFiltering))
@@ -52,7 +49,6 @@
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.DisplayOrder))
                             {
                                 Title = T("Admin.Catalog.Products.SpecificationAttributes.Fields.DisplayOrder").Text,
-                                Width = "150",
                                 ClassName =  NopColumnClassDefaults.CenterAll
                             },
                             new ColumnProperty(nameof(ProductSpecificationAttributeModel.Id))
@@ -65,11 +61,11 @@
                         }
                     })
                 </div>
-                <div class="panel-footer">
+                <div class="card-footer">
                     <a asp-action="ProductSpecAttributeAddOrEdit"
                        asp-route-productId="@Model.Id"
-                       class="btn bg-blue">
-                        <i class="fa fa-plus-square"></i>
+                       class="btn btn-primary">
+                        <i class="fas fa-square-plus"></i>
                         @T("Admin.Catalog.Products.SpecificationAttributes.AddButton")
                     </a>
 
@@ -78,8 +74,8 @@
         }
         else
         {
-            <div class="panel panel-default">
-                <div class="panel-body">
+            <div class="card card-default">
+                <div class="card-body">
                     @T("Admin.Catalog.Products.SpecificationAttributes.NoAttributes")
                 </div>
             </div>
@@ -87,8 +83,8 @@
     }
     else
     {
-        <div class="panel panel-default">
-            <div class="panel-body">
+        <div class="card card-default">
+            <div class="card-body">
                 @T("Admin.Catalog.Products.SpecificationAttributes.SaveBeforeEdit")
             </div>
         </div>

@@ -1,63 +1,56 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Tax;
-using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Web.Framework.Controllers;
 
-namespace Nop.Plugin.Tax.Avalara.Controllers
+namespace Nop.Plugin.Tax.Avalara.Controllers;
+
+[AutoValidateAntiforgeryToken]
+public class AddressValidationController : BaseController
 {
-    public class AddressValidationController : BaseController
+    #region Fields
+
+    protected readonly ICustomerService _customerService;
+    protected readonly IWorkContext _workContext;
+    protected readonly TaxSettings _taxSettings;
+
+    #endregion
+
+    #region Ctor
+
+    public AddressValidationController(ICustomerService customerService,
+        IWorkContext workContext,
+        TaxSettings taxSettings)
     {
-        #region Fields
-
-        private readonly IAddressService _addressService;
-        private readonly ICustomerService _customerService;
-        private readonly IWorkContext _workContext;
-        private readonly TaxSettings _taxSettings;
-
-        #endregion
-
-        #region Ctor
-
-        public AddressValidationController(IAddressService addressService,
-            ICustomerService customerService,
-            IWorkContext workContext,
-            TaxSettings taxSettings)
-        {
-            _addressService = addressService;
-            _customerService = customerService;
-            _workContext = workContext;
-            _taxSettings = taxSettings;
-        }
-
-        #endregion
-
-        #region Methods
-
-        [HttpPost]
-        public IActionResult UseValidatedAddress(int addressId, bool isNewAddress)
-        {
-            //try to get an address by the passed identifier
-            var address = _addressService.GetAddressById(addressId);
-            if (address != null)
-            {
-                //add address to customer collection if it's a new
-                if (isNewAddress)
-                    _workContext.CurrentCustomer.Addresses.Add(address);
-
-                //and update appropriate customer address
-                if (_taxSettings.TaxBasedOn == TaxBasedOn.BillingAddress)
-                    _workContext.CurrentCustomer.BillingAddress = address;
-                if (_taxSettings.TaxBasedOn == TaxBasedOn.ShippingAddress)
-                    _workContext.CurrentCustomer.ShippingAddress = address;
-                _customerService.UpdateCustomer(_workContext.CurrentCustomer);
-            }
-
-            //nothing to return
-            return Content(string.Empty);
-        }
-
-        #endregion
+        _customerService = customerService;
+        _workContext = workContext;
+        _taxSettings = taxSettings;
     }
+
+    #endregion
+
+    #region Methods
+
+    [HttpPost]
+    public async Task<IActionResult> UseValidatedAddress(int addressId)
+    {
+        //try to get an address by the passed identifier
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        var address = await _customerService.GetCustomerAddressAsync(customer.Id, addressId);
+        if (address != null)
+        {
+            //and update appropriate customer address
+            if (_taxSettings.TaxBasedOn == TaxBasedOn.BillingAddress)
+                customer.BillingAddressId = address.Id;
+            if (_taxSettings.TaxBasedOn == TaxBasedOn.ShippingAddress)
+                customer.ShippingAddressId = address.Id;
+            await _customerService.UpdateCustomerAsync(customer);
+        }
+
+        //nothing to return
+        return Content(string.Empty);
+    }
+
+    #endregion
 }

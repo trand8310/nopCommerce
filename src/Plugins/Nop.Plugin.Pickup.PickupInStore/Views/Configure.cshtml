@@ -7,9 +7,9 @@
 }
 
 <form asp-controller="PickupInStore" asp-action="Configure" method="post" id="pickup-instore-form">
-    <div class="panel-group">
-        <div class="panel panel-default">
-            <div class="panel-body">
+    <div class="cards-group">
+        <div class="card card-default">
+            <div class="card-body">
                 @await Html.PartialAsync("Table", new DataTablesModel
            {
                Name = "pickup-points-grid",
@@ -21,28 +21,23 @@
                 {
                     new ColumnProperty(nameof(StorePickupPointModel.Name))
                     {
-                        Title = T("Plugins.Pickup.PickupInStore.Fields.Name").Text,
-                        Width = "200"
+                        Title = T("Plugins.Pickup.PickupInStore.Fields.Name").Text
                     },
                     new ColumnProperty(nameof(StorePickupPointModel.OpeningHours))
                     {
-                        Title = T("Plugins.Pickup.PickupInStore.Fields.OpeningHours").Text,
-                        Width = "200"
+                        Title = T("Plugins.Pickup.PickupInStore.Fields.OpeningHours").Text
                     },
                     new ColumnProperty(nameof(StorePickupPointModel.PickupFee))
                     {
-                        Title = T("Plugins.Pickup.PickupInStore.Fields.PickupFee").Text,
-                        Width = "100"
+                        Title = T("Plugins.Pickup.PickupInStore.Fields.PickupFee").Text
                     },
                     new ColumnProperty(nameof(StorePickupPointModel.DisplayOrder))
                     {
-                        Title = T("Plugins.Pickup.PickupInStore.Fields.DisplayOrder").Text,
-                        Width = "100"
+                        Title = T("Plugins.Pickup.PickupInStore.Fields.DisplayOrder").Text
                     },
                     new ColumnProperty(nameof(StorePickupPointModel.StoreName))
                     {
-                        Title = T("Plugins.Pickup.PickupInStore.Fields.Store").Text,
-                        Width = "100"
+                        Title = T("Plugins.Pickup.PickupInStore.Fields.Store").Text
                     },
                     new ColumnProperty(nameof(StorePickupPointModel.Id))
                     {
@@ -64,16 +59,17 @@
 
             <script>
                 function renderColumnEdit(data, type, row, meta) {
-                    return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/PickupInStore/Edit/")' + data + '?btnId=btnRefresh&formId=pickup-instore-form\', 800, 800, true); return false;\" class="btn btn-default"><i class="fa fa-pencil"></i>@T("Admin.Common.Edit")</button>';
+                    return '<button onclick=\"javascript:OpenWindow(\'@Url.Content("~/Admin/PickupInStore/Edit/")' + data + '?btnId=btnRefresh&formId=pickup-instore-form\', 800, 800, true); return false;\" class="btn btn-default"><i class="fas fa-pencil"></i>@T("Admin.Common.Edit").Text</button>';
                 }
             </script>
 
-            <div class="panel-footer">
-                <input type="submit" id="btnAddNewOption" class="btn btn-primary" value="@T("Plugins.Pickup.PickupInStore.AddNew")" onclick="javascript:OpenWindow('@(Url.Action("Create", "PickupInStore",  new { btnId = "btnRefresh", formId = "pickup-instore-form" }))', 800, 800, true); return false;"/>
-                <input type="submit" id="btnRefresh" class="btn btn-default" style="display: none" />
+            <div class="card-footer">
+                <button type="submit" id="btnAddNewOption" name="save" class="btn btn-primary" onclick="javascript:OpenWindow('@(Url.Action("Create", "PickupInStore",  new { btnId = "btnRefresh", formId = "pickup-instore-form" }))', 800, 800, true); return false;">@T("Plugins.Pickup.PickupInStore.AddNew")</button>
+
+                <button id="btnRefresh" type="submit" name="save" class="btn btn-default" style="display: none"></button>
             </div>
             <script>
-                $(document).ready(function () {
+                $(function() {
                     $('#btnRefresh').click(function () {
                         //refresh grid
                         updateTable('#pickup-points-grid');
